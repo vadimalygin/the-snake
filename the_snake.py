@@ -1,4 +1,5 @@
 from random import randint
+import sys
 
 import pygame as pg
 
@@ -68,9 +69,9 @@ class Apple(GameObject):
 
     def __init__(
         self,
-        occupied_cells: list[Cell] = [INITIAL_SNAKE_CELL],
         position: Cell = INITIAL_GENERAL_CELL,
-        body_color: Color = APPLE_COLOR
+        body_color: Color = APPLE_COLOR,
+        occupied_cells: list[Cell] = [INITIAL_SNAKE_CELL]
     ) -> None:
         super().__init__(position, body_color)
         self.randomize_position(occupied_cells)
@@ -144,7 +145,7 @@ class Snake(GameObject):
             pg.draw.rect(screen, BORDER_COLOR, rect, 1)
 
         # Отрисовка головы змейки
-        head_rect = pg.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
+        head_rect = pg.Rect(self.get_head_position(), (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, self.body_color, head_rect)
         pg.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
@@ -198,7 +199,7 @@ def handle_keys(game_object: Snake):
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
-            raise SystemExit
+            sys.exit()
         elif event.type == pg.KEYDOWN:
             if event.key == pg.K_UP and game_object.direction != DOWN:
                 game_object.next_direction = UP
@@ -217,7 +218,7 @@ def main():
     # Тут нужно создать экземпляры классов.
     snake: Snake = Snake()
     occupied_cells: list[Cell] = snake.positions
-    apple: Apple = Apple(occupied_cells)
+    apple: Apple = Apple(occupied_cells=occupied_cells)
 
     while True:
         clock.tick(SPEED)
