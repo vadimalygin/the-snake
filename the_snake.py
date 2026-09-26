@@ -1,7 +1,7 @@
+import json
 from random import randint
 import sys
 
-import json
 import pygame as pg
 
 # Пользовательские типы данных для координат, цвета и направления
@@ -104,9 +104,11 @@ class Apple(GameObject):
         self,
         position: Cell = INITIAL_GENERAL_CELL,
         body_color: Color = APPLE_COLOR,
-        occupied_cells: list[Cell] = [INITIAL_SNAKE_CELL]
+        occupied_cells: list[Cell] | None = None
     ) -> None:
         super().__init__(position, body_color)
+        if occupied_cells is None:
+            occupied_cells = [INITIAL_SNAKE_CELL]
         self.randomize_position(occupied_cells)
 
     def draw(self) -> None:
@@ -188,15 +190,15 @@ class Wall(GameObject):
             self,
             position: Cell = INITIAL_GENERAL_CELL,
             body_color: Color = WALL_COLOR,
-            map: list[Cell] | None = None
+            level: list[Cell] | None = None
     ) -> None:
         super().__init__(position, body_color)
-        self.map = map.copy() if map is not None else []
+        self.level = level.copy() if level is not None else []
 
     def draw(self) -> None:
         """Отрисовка препятствия."""
-        if self.map:
-            for wall in self.map:
+        if self.level:
+            for wall in self.level:
                 self.draw_cell(wall)
 
 
@@ -263,7 +265,7 @@ def main():
     level = 3
     current_level = [tuple(cell) for cell in levels['level_' + str(level)]]
     # Создание игровых объектов: змейка и яблоко
-    wall: Wall = Wall(map=current_level)
+    wall: Wall = Wall(level=current_level)
     snake: Snake = Snake()
     occupied_cells: list[Cell] = current_level + snake.positions
     apple: Apple = Apple(occupied_cells=occupied_cells)
