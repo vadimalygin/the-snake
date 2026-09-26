@@ -68,7 +68,7 @@ class Apple(GameObject):
 
     def __init__(
         self,
-        occupied_cells: list[Cell],
+        occupied_cells: list[Cell] = [INITIAL_SNAKE_CELL],
         position: Cell = INITIAL_GENERAL_CELL,
         body_color: Color = APPLE_COLOR
     ) -> None:
