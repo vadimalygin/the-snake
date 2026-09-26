@@ -1,5 +1,5 @@
-import json
 from random import randint
+import json
 import sys
 
 import pygame as pg
