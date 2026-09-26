@@ -31,6 +31,7 @@ GRID_LINE_COLOR: Color = pg.color.THECOLORS['gray']
 BORDER_COLOR: Color = pg.color.THECOLORS['aquamarine4']
 APPLE_COLOR: Color = pg.color.THECOLORS['red']
 SNAKE_COLOR: Color = pg.color.THECOLORS['green']
+WALL_COLOR: Color = pg.color.THECOLORS['darkgrey']
 
 # Направления движения:
 UP: Direction = (0, -1)
@@ -175,6 +176,28 @@ class Snake(GameObject):
             self.next_direction = None
 
 
+class Wall(GameObject):
+    """Класс препятствие."""
+
+    def __init__(
+            self,
+            position: Cell = INITIAL_GENERAL_CELL,
+            body_color: Color = WALL_COLOR,
+            map: list[Cell] | None = None
+    ) -> None:
+        super().__init__(position, body_color)
+        if map is None:
+            self.map: list[Cell] | None = None
+        else:
+            self.map: list[Cell] | None = map.copy()
+
+    def draw(self) -> None:
+        """Отрисовка препятствия."""
+        if self.map:
+            for wall in self.map:
+                self.draw_cell(wall)
+
+
 def has_collision(snake: Snake, occupied_cells: list[Cell]) -> bool:
     """Проверка самопересечения змейки."""
     if occupied_cells.count(snake.get_head_position()) > 1:
@@ -237,6 +260,7 @@ def main():
     # Инициализация PyGame:
     pg.init()
     # Создание игровых объектов: змейка и яблоко
+    wall: Wall = Wall()
     snake: Snake = Snake()
     occupied_cells: list[Cell] = snake.positions
     apple: Apple = Apple(occupied_cells=occupied_cells)
@@ -253,6 +277,7 @@ def main():
             draw_lines()
         snake.draw()
         apple.draw()
+        wall.draw()
 
         check_eaten(snake, apple, occupied_cells)
         snake.move()
