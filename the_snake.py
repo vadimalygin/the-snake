@@ -1,6 +1,7 @@
 from random import randint
 import sys
 
+import json
 import pygame as pg
 
 # Пользовательские типы данных для координат, цвета и направления
@@ -53,6 +54,10 @@ SPEED = 20
 screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
 pg.display.set_caption('Змейка')
 clock = pg.time.Clock()
+
+# Чтение уровней из файла
+with open('levels.json', encoding='utf-8') as file:
+    levels = json.load(file)
 
 
 class GameObject:
@@ -186,10 +191,7 @@ class Wall(GameObject):
             map: list[Cell] | None = None
     ) -> None:
         super().__init__(position, body_color)
-        if map is None:
-            self.map: list[Cell] | None = None
-        else:
-            self.map: list[Cell] | None = map.copy()
+        self.map = map.copy() if map is not None else []
 
     def draw(self) -> None:
         """Отрисовка препятствия."""
@@ -200,9 +202,7 @@ class Wall(GameObject):
 
 def has_collision(snake: Snake, occupied_cells: list[Cell]) -> bool:
     """Проверка самопересечения змейки."""
-    if occupied_cells.count(snake.get_head_position()) > 1:
-        return True
-    return False
+    return snake.get_head_position() in occupied_cells
 
 
 def check_eaten(snake: Snake, apple: Apple, occupied_cells: list[Cell]):
@@ -259,10 +259,13 @@ def main():
     """Точка входа."""
     # Инициализация PyGame:
     pg.init()
+    # Выбор уровня
+    level = 3
+    current_level = [tuple(cell) for cell in levels['level_' + str(level)]]
     # Создание игровых объектов: змейка и яблоко
-    wall: Wall = Wall()
+    wall: Wall = Wall(map=current_level)
     snake: Snake = Snake()
-    occupied_cells: list[Cell] = snake.positions
+    occupied_cells: list[Cell] = current_level + snake.positions
     apple: Apple = Apple(occupied_cells=occupied_cells)
 
     screen.fill(BOARD_BACKGROUND_COLOR)
@@ -270,7 +273,7 @@ def main():
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        occupied_cells: list[Cell] = snake.positions
+        occupied_cells = current_level + snake.positions[1:]
 
         # Отрисовка элементов игры
         if SHOW_GRID:
