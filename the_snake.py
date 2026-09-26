@@ -1,6 +1,6 @@
-from random import randint
 import json
 import sys
+from random import randint
 
 import pygame as pg
 
