@@ -143,10 +143,6 @@ class Snake(GameObject):
         """Возвращение текущих координат головы змейки."""
         return self.positions[0]
 
-    def has_collision(self) -> bool:
-        """Проверка самопересечения змейки."""
-        return self.get_head_position() in self.positions[1:]
-
     def move(self) -> None:
         """Организация движения змейки."""
         # Вычисление нового положения головы змейки
@@ -158,8 +154,6 @@ class Snake(GameObject):
 
         # Добавление новой головы в начало списка и удаление "хвоста"
         self.positions.insert(0, (new_x, new_y))
-        if self.has_collision():
-            self.reset()
         if len(self.positions) > self.length:
             self.last = self.positions.pop()
 
@@ -179,6 +173,13 @@ class Snake(GameObject):
         if self.next_direction:
             self.direction = self.next_direction
             self.next_direction = None
+
+
+def has_collision(snake: Snake, occupied_cells: list[Cell]) -> bool:
+    """Проверка самопересечения змейки."""
+    if occupied_cells.count(snake.get_head_position()) > 1:
+        return True
+    return False
 
 
 def check_eaten(snake: Snake, apple: Apple, occupied_cells: list[Cell]):
@@ -224,7 +225,10 @@ def handle_keys(game_object: Snake):
             if event.key == pg.K_ESCAPE:
                 pg.quit()
                 sys.exit()
-            if event.key in TURNS and game_object.direction != TURNS[event.key][1]:
+            if (
+                event.key in TURNS
+                and game_object.direction != TURNS[event.key][1]
+            ):
                 game_object.next_direction = TURNS[event.key][0]
 
 
@@ -242,6 +246,7 @@ def main():
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
+        occupied_cells: list[Cell] = snake.positions
 
         # Отрисовка элементов игры
         if SHOW_GRID:
@@ -251,6 +256,8 @@ def main():
 
         check_eaten(snake, apple, occupied_cells)
         snake.move()
+        if has_collision(snake, occupied_cells):
+            snake.reset()
         pg.display.update()
 
 
