@@ -85,12 +85,11 @@ class GameObject:
     ) -> None:
         """
         Отрисовка ячейки по координатам.
+
         Отсутствующие аргументы заменяются на координаты и цвет объекта.
         """
-        if position is None:
-            position = self.position
-        if color is None:
-            color = self.body_color
+        position = position or self.position
+        color = color or self.body_color
         rect = pg.Rect(position, (GRID_SIZE, GRID_SIZE))
         pg.draw.rect(screen, color, rect)
         if border:
@@ -107,8 +106,7 @@ class Apple(GameObject):
         occupied_cells: list[Cell] | None = None
     ) -> None:
         super().__init__(position, body_color)
-        if occupied_cells is None:
-            occupied_cells = [INITIAL_SNAKE_CELL]
+        occupied_cells = occupied_cells or []
         self.randomize_position(occupied_cells)
 
     def draw(self) -> None:
@@ -190,10 +188,15 @@ class Wall(GameObject):
             self,
             position: Cell = INITIAL_GENERAL_CELL,
             body_color: Color = WALL_COLOR,
+            occupied_cells: list[Cell] | None = None,
             level: list[Cell] | None = None
     ) -> None:
         super().__init__(position, body_color)
-        self.level = level.copy() if level is not None else []
+        occupied_cells = occupied_cells or []
+        if level is not None:
+            self.level = list(set(level.copy()) - set(occupied_cells))
+        else:
+            self.level = []
 
     def draw(self) -> None:
         """Отрисовка препятствия."""
@@ -211,7 +214,6 @@ def check_eaten(snake: Snake, apple: Apple, occupied_cells: list[Cell]):
     """Обновление длины змейки в связи с съеденым яблоком."""
     if apple.position == snake.get_head_position():
         snake.length += 1
-        apple.draw_cell(color=snake.body_color)
         apple.randomize_position(occupied_cells)
 
 
@@ -265,9 +267,10 @@ def main():
     level = 3
     current_level = [tuple(cell) for cell in levels['level_' + str(level)]]
     # Создание игровых объектов: змейка и яблоко
-    wall: Wall = Wall(level=current_level)
     snake: Snake = Snake()
-    occupied_cells: list[Cell] = current_level + snake.positions
+    occupied_cells: list[Cell] = snake.positions
+    wall: Wall = Wall(occupied_cells=occupied_cells, level=current_level)
+    occupied_cells = wall.level + snake.positions
     apple: Apple = Apple(occupied_cells=occupied_cells)
 
     screen.fill(BOARD_BACKGROUND_COLOR)
@@ -275,19 +278,20 @@ def main():
     while True:
         clock.tick(SPEED)
         handle_keys(snake)
-        occupied_cells = current_level + snake.positions[1:]
+        occupied_cells = wall.level + snake.positions
 
         # Отрисовка элементов игры
         if SHOW_GRID:
             draw_lines()
-        snake.draw()
         apple.draw()
+        snake.draw()
         wall.draw()
 
         check_eaten(snake, apple, occupied_cells)
         snake.move()
         if has_collision(snake, occupied_cells):
             snake.reset()
+            apple.randomize_position(snake.positions + wall.level)
         pg.display.update()
 
 
